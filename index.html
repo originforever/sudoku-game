@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数独练习集</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+        }
+        .stat-card .number {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .stat-card .label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        .version-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .version-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .version-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        .version-card.mobile {
+            border-left: 5px solid #43a047;
+        }
+        .version-card.desktop {
+            border-left: 5px solid #2196f3;
+        }
+        .version-card .emoji {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+        .version-card h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .version-card p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .version-card .features {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        .version-card .feature-tag {
+            background: #f5f5f5;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            color: #666;
+        }
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.8;
+            font-size: 14px;
+        }
+        @media (max-width: 600px) {
+            .header h1 { font-size: 36px; }
+            .stats { flex-direction: column; gap: 10px; }
+            .version-card { padding: 20px; }
+            .version-card .emoji { font-size: 50px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧩 数独练习集</h1>
+            <p>从入门到专业 · 180道精选题目</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="number">180</div>
+                <div class="label">总题数</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">5</div>
+                <div class="label">难度级别</div>
+            </div>
+        </div>
+        
+        <div class="version-cards">
+            <a href="sudoku-mobile.html" class="version-card mobile">
+                <div class="emoji">📱</div>
+                <h2>手机版</h2>
+                <p>专为移动设备优化，触控操作流畅，随时随地练习数独</p>
+                <div class="features">
+                    <span class="feature-tag">触控优化</span>
+                    <span class="feature-tag">笔记模式</span>
+                    <span class="feature-tag">思考记录</span>
+                    <span class="feature-tag">进度保存</span>
+                </div>
+            </a>
+            
+            <a href="数独练习集-总索引.html" class="version-card desktop">
+                <div class="emoji">💻</div>
+                <h2>电脑版</h2>
+                <p>适合大屏幕设备，完整功能体验，支持键盘快捷操作</p>
+                <div class="features">
+                    <span class="feature-tag">大屏优化</span>
+                    <span class="feature-tag">翻页浏览</span>
+                    <span class="feature-tag">思考窗口</span>
+                    <span class="feature-tag">进度保存</span>
+                </div>
+            </a>
+        </div>
+        
+        <div class="footer">
+            <p>最后更新：2026-05-14 | GitHub Pages托管</p>
+        </div>
+    </div>
+</body>
+</html>
