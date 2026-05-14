@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数独练习集 - 总索引</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 20px 40px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+        }
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: 700;
+        }
+        .stat-card .label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .levels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        .level-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .level-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        .level-header {
+            padding: 25px;
+            color: white;
+            text-align: center;
+        }
+        .level-header.beginner { background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%); }
+        .level-header.elementary { background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); }
+        .level-header.intermediate { background: linear-gradient(135deg, #e53935 0%, #c62828 100%); }
+        .level-header.advanced { background: linear-gradient(135deg, #8e24aa 0%, #6a1b9a 100%); }
+        .level-header.expert { background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%); }
+        .level-header h2 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        .level-header .emoji {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        .level-header .info {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .level-body {
+            padding: 25px;
+        }
+        .level-body .description {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        .level-body .techniques {
+            margin-bottom: 20px;
+        }
+        .level-body .techniques h3 {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+        .level-body .technique-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .level-body .tag {
+            background: #f5f5f5;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            color: #666;
+        }
+        .puzzle-list {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .puzzle-btn {
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        .puzzle-btn:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1976d2;
+        }
+        .puzzle-btn.completed {
+            background: #e8f5e9;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .page-btn {
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .page-btn:hover:not(:disabled) {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .page-info {
+            font-size: 14px;
+            color: #666;
+        }
+        .level-footer {
+            padding: 0 25px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .level-footer .time {
+            color: #999;
+            font-size: 14px;
+        }
+        .start-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        .start-btn:hover {
+            transform: scale(1.05);
+        }
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.8;
+        }
+        .footer a {
+            color: white;
+            text-decoration: underline;
+        }
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 32px;
+            }
+            .levels {
+                grid-template-columns: 1fr;
+            }
+            .puzzle-list {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧩 数独练习集</h1>
+            <p>从入门到专业 · 180道精选题目 · 系统化进阶训练</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="number">180</div>
+                <div class="label">总题数</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">5</div>
+                <div class="label">难度级别</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">11</div>
+                <div class="label">解题技巧</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="completedCount">0</div>
+                <div class="label">已完成</div>
+            </div>
+        </div>
+
+        <div class="levels" id="levelsContainer">
+            <!-- 由JavaScript动态生成 -->
+        </div>
+
+        <div class="footer">
+            <p>📚 相关资料：<a href="数独进阶计划.md">学习计划</a> · <a href="obsidian/数独练习MOC.md">Obsidian知识库</a> · <a href="练习集总览.md">练习集总览</a></p>
+            <p style="margin-top: 10px;">最后更新：2026-05-14 | 总题数：180题</p>
+        </div>
+    </div>
+
+    <script>
+        // 难度配置
+        const levelConfigs = [
+            {
+                id: 'beginner',
+                name: '入门级',
+                emoji: '🟢',
+                total: 30,
+                givenRange: '35-40个已知数字',
+                time: '3-5分钟/题',
+                techniques: ['唯余法', '排除法'],
+                description: '适合零基础新手，掌握唯余法和排除法两大基础技巧。',
+                headerClass: 'beginner'
+            },
+            {
+                id: 'elementary',
+                name: '初级',
+                emoji: '🟠',
+                total: 40,
+                givenRange: '30-34个已知数字',
+                time: '5-8分钟/题',
+                techniques: ['唯余法', '排除法', '数对法'],
+                description: '巩固基础技巧，学习数对法，提升解题速度。',
+                headerClass: 'elementary'
+            },
+            {
+                id: 'intermediate',
+                name: '中级',
+                emoji: '🔴',
+                total: 60,
+                givenRange: '25-29个已知数字',
+                time: '8-15分钟/题',
+                techniques: ['三数组法', '隐性数对', '区块排除法'],
+                description: '学习三数组法、隐性数对、区块排除等中级技巧。',
+                headerClass: 'intermediate'
+            },
+            {
+                id: 'advanced',
+                name: '高级',
+                emoji: '🟣',
+                total: 30,
+                givenRange: '22-25个已知数字',
+                time: '10-20分钟/题',
+                techniques: ['Fish系列', 'Wing系列'],
+                description: '掌握Fish系列和Wing系列高级技巧，挑战更复杂的局面。',
+                headerClass: 'advanced'
+            },
+            {
+                id: 'expert',
+                name: '专业级',
+                emoji: '🔵',
+                total: 20,
+                givenRange: '20-22个已知数字',
+                time: '15-30分钟/题',
+                techniques: ['链式推理', '唯一矩形', '高级Fish'],
+                description: '学习链式推理、唯一矩形等专家级技巧，达到竞技水平。',
+                headerClass: 'expert'
+            }
+        ];
+
+        // 每页显示10题
+        const PER_PAGE = 10;
+
+        // 当前页码（每个难度独立）
+        const currentPages = {
+            beginner: 1,
+            elementary: 1,
+            intermediate: 1,
+            advanced: 1,
+            expert: 1
+        };
+
+        // 生成分页按钮
+        function generatePagination(levelId, total) {
+            const totalPages = Math.ceil(total / PER_PAGE);
+            const currentPage = currentPages[levelId];
+            const start = (currentPage - 1) * PER_PAGE + 1;
+            const end = Math.min(currentPage * PER_PAGE, total);
+            
+            return `
+                <div class="pagination">
+                    <button class="page-btn" onclick="changePage('${levelId}', -1)" ${currentPage === 1 ? 'disabled' : ''}>◀ 上一页</button>
+                    <span class="page-info">第 ${currentPage}/${totalPages} 页（第${start}-${end}题）</span>
+                    <button class="page-btn" onclick="changePage('${levelId}', 1)" ${currentPage === totalPages ? 'disabled' : ''}>下一页 ▶</button>
+                </div>
+            `;
+        }
+
+        // 生成题目按钮
+        function generatePuzzleButtons(levelId, total) {
+            const currentPage = currentPages[levelId];
+            const start = (currentPage - 1) * PER_PAGE + 1;
+            const end = Math.min(currentPage * PER_PAGE, total);
+            
+            let buttons = '';
+            for (let i = start; i <= end; i++) {
+                buttons += `<a href="sudoku-game.html?level=${levelId}&index=${i}" class="puzzle-btn" data-key="level=${levelId}&index=${i}">${i}</a>`;
+            }
+            return buttons;
+        }
+
+        // 生成难度卡片
+        function generateLevelCard(config) {
+            const techniques = config.techniques.map(t => `<span class="tag">${t}</span>`).join('');
+            
+            return `
+                <div class="level-card">
+                    <div class="level-header ${config.headerClass}">
+                        <div class="emoji">${config.emoji}</div>
+                        <h2>${config.name}</h2>
+                        <div class="info">${config.total}题 · ${config.givenRange}</div>
+                    </div>
+                    <div class="level-body">
+                        <div class="description">${config.description}</div>
+                        <div class="techniques">
+                            <h3>适用技巧</h3>
+                            <div class="technique-tags">${techniques}</div>
+                        </div>
+                        <div class="puzzle-list" id="${config.id}List">
+                            ${generatePuzzleButtons(config.id, config.total)}
+                        </div>
+                        ${generatePagination(config.id, config.total)}
+                    </div>
+                    <div class="level-footer">
+                        <span class="time">建议用时：${config.time}</span>
+                        <a href="sudoku-game.html?level=${config.id}&index=1" class="start-btn">开始练习 →</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染所有卡片
+        function renderAllCards() {
+            const container = document.getElementById('levelsContainer');
+            container.innerHTML = levelConfigs.map(generateLevelCard).join('');
+            updateCompletedStatus();
+        }
+
+        // 翻页
+        function changePage(levelId, direction) {
+            const config = levelConfigs.find(c => c.id === levelId);
+            const totalPages = Math.ceil(config.total / PER_PAGE);
+            
+            currentPages[levelId] += direction;
+            if (currentPages[levelId] < 1) currentPages[levelId] = 1;
+            if (currentPages[levelId] > totalPages) currentPages[levelId] = totalPages;
+            
+            // 只更新该难度的题目列表和分页
+            const list = document.getElementById(`${levelId}List`);
+            list.innerHTML = generatePuzzleButtons(levelId, config.total);
+            
+            // 更新分页按钮
+            const card = list.closest('.level-card');
+            const paginationContainer = card.querySelector('.pagination');
+            paginationContainer.outerHTML = generatePagination(levelId, config.total);
+            
+            updateCompletedStatus();
+        }
+
+        // 更新完成状态
+        function updateCompletedStatus() {
+            const completed = JSON.parse(localStorage.getItem('sudoku_completed') || '[]');
+            document.getElementById('completedCount').textContent = completed.length;
+            
+            completed.forEach(key => {
+                const btn = document.querySelector(`a[data-key="${key}"]`);
+                if (btn) {
+                    btn.classList.add('completed');
+                }
+            });
+        }
+
+        // 初始化
+        renderAllCards();
+    </script>
+</body>
+</html>

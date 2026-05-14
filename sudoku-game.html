@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数独练习</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        body.beginner {
+            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+        }
+        body.elementary {
+            background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+        }
+        body.intermediate {
+            background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
+        }
+        body.advanced {
+            background: linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%);
+        }
+        body.expert {
+            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        .header.beginner h1 { color: #388E3C; }
+        .header.elementary h1 { color: #F57C00; }
+        .header.intermediate h1 { color: #D32F2F; }
+        .header.advanced h1 { color: #7B1FA2; }
+        .header.expert h1 { color: #1976D2; }
+        .header .level {
+            padding: 3px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            display: inline-block;
+            color: white;
+        }
+        .header .level.beginner { background: #4CAF50; }
+        .header .level.elementary { background: #FF9800; }
+        .header .level.intermediate { background: #F44336; }
+        .header .level.advanced { background: #9C27B0; }
+        .header .level.expert { background: #2196F3; }
+        .controls {
+            text-align: center;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .controls button {
+            background: #666;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .controls button:hover {
+            background: #333;
+        }
+        .controls button.primary {
+            background: #4CAF50;
+        }
+        .controls button.primary:hover {
+            background: #388E3C;
+        }
+        .puzzle-container {
+            max-width: 550px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .puzzle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .puzzle-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .puzzle-title.beginner { color: #388E3C; }
+        .puzzle-title.elementary { color: #F57C00; }
+        .puzzle-title.intermediate { color: #D32F2F; }
+        .puzzle-title.advanced { color: #7B1FA2; }
+        .puzzle-title.expert { color: #1976D2; }
+        .sudoku-board {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 0;
+            width: 450px;
+            height: 450px;
+            margin: 0 auto;
+            border: 3px solid #333;
+            background: white;
+        }
+        .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 500;
+            border: 1px solid #ccc;
+            background: white;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.2s;
+        }
+        .cell:nth-child(3n) { border-right: 2px solid #333; }
+        .cell:nth-child(9n) { border-right: 1px solid #ccc; }
+        .cell:nth-child(n+19):nth-child(-n+27),
+        .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid #333; }
+        .cell.given {
+            background: #f5f5f5;
+            font-weight: 700;
+            cursor: default;
+        }
+        .cell.given.beginner { background: #E8F5E9; color: #388E3C; }
+        .cell.given.elementary { background: #FFF3E0; color: #F57C00; }
+        .cell.given.intermediate { background: #FFEBEE; color: #D32F2F; }
+        .cell.given.advanced { background: #F3E5F5; color: #7B1FA2; }
+        .cell.given.expert { background: #E3F2FD; color: #1976D2; }
+        .cell.empty {
+            background: white;
+            color: #1976D2;
+        }
+        .cell.selected {
+            background: #BBDEFB !important;
+        }
+        .cell.error {
+            color: #F44336 !important;
+            background: #FFEBEE !important;
+        }
+        .cell.correct {
+            color: #4CAF50;
+        }
+        .cell:hover:not(.given) {
+            background: #F1F8E9;
+        }
+        .number-pad {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .number-btn {
+            width: 42px;
+            height: 42px;
+            font-size: 18px;
+            font-weight: 600;
+            border: 2px solid #4CAF50;
+            background: white;
+            color: #388E3C;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .number-btn:hover {
+            background: #4CAF50;
+            color: white;
+        }
+        .number-btn.clear {
+            border-color: #F44336;
+            color: #F44336;
+        }
+        .number-btn.clear:hover {
+            background: #F44336;
+            color: white;
+        }
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding: 8px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+        .timer {
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            color: #388E3C;
+        }
+        .message {
+            text-align: center;
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+        }
+        .message.success {
+            background: #C8E6C9;
+            color: #2E7D32;
+            display: block;
+        }
+        .message.error {
+            background: #FFCDD2;
+            color: #C62828;
+            display: block;
+        }
+        .notes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            font-size: 10px;
+            color: #999;
+            pointer-events: none;
+        }
+        .notes span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .back-btn {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .back-btn:hover {
+            color: #333;
+        }
+        /* 思考窗口样式 - 侧边栏模式 */
+        .thinking-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100%;
+            background: white;
+            z-index: 1000;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.2);
+            transition: right 0.3s ease;
+        }
+        .thinking-modal.show {
+            display: block;
+            right: 0;
+        }
+        .thinking-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .thinking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            background: #f5f5f5;
+        }
+        .thinking-header h3 {
+            margin: 0;
+            color: #333;
+            font-size: 16px;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+            padding: 5px;
+        }
+        .close-btn:hover {
+            color: #333;
+        }
+        .thinking-body {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        .thinking-section {
+            margin-bottom: 20px;
+        }
+        .thinking-section label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+        .technique-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .tech-tag {
+            background: #f5f5f5;
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .tech-tag:hover {
+            background: #e3f2fd;
+        }
+        .tech-tag.selected {
+            background: #4CAF50;
+            color: white;
+            border-color: #388E3C;
+        }
+        #thinkingText {
+            width: 100%;
+            height: 200px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 13px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        #thinkingText:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        .time-record {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #currentTime {
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            color: #4CAF50;
+            font-weight: 600;
+        }
+        .save-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .save-btn:hover {
+            background: #388E3C;
+        }
+        .thinking-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #eee;
+            background: #fafafa;
+        }
+        @media (max-width: 600px) {
+            .sudoku-board {
+                width: 320px;
+                height: 320px;
+            }
+            .cell {
+                font-size: 18px;
+            }
+            .number-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+            .thinking-content {
+                width: 95%;
+                max-height: 90vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header" id="header">
+        <h1 id="title">数独练习</h1>
+        <span class="level" id="levelBadge">入门级</span>
+    </div>
+
+    <div class="controls">
+        <button onclick="prevPuzzle()">◀ 上一题</button>
+        <button onclick="nextPuzzle()">下一题 ▶</button>
+        <button onclick="checkAnswer()" class="primary">检查答案</button>
+        <button onclick="showHint()">提示</button>
+        <button onclick="toggleNotesMode()" id="notesBtn">笔记</button>
+        <button onclick="openThinkingModal()">思考</button>
+        <button onclick="resetPuzzle()">重置</button>
+    </div>
+
+    <div class="puzzle-container">
+        <div class="puzzle-header">
+            <div class="puzzle-title" id="puzzleTitle">第 1 题</div>
+            <div id="puzzleInfo">已知：40个数字</div>
+        </div>
+
+        <div class="sudoku-board" id="sudokuBoard"></div>
+
+        <div class="number-pad">
+            <button class="number-btn" onclick="inputNumber(1)">1</button>
+            <button class="number-btn" onclick="inputNumber(2)">2</button>
+            <button class="number-btn" onclick="inputNumber(3)">3</button>
+            <button class="number-btn" onclick="inputNumber(4)">4</button>
+            <button class="number-btn" onclick="inputNumber(5)">5</button>
+            <button class="number-btn" onclick="inputNumber(6)">6</button>
+            <button class="number-btn" onclick="inputNumber(7)">7</button>
+            <button class="number-btn" onclick="inputNumber(8)">8</button>
+            <button class="number-btn" onclick="inputNumber(9)">9</button>
+            <button class="number-btn clear" onclick="inputNumber(0)">✕</button>
+        </div>
+
+        <div class="status-bar">
+            <div class="timer" id="timer">00:00</div>
+            <div id="progress">进度：0/81</div>
+        </div>
+
+        <div class="message" id="message"></div>
+        
+        <a href="数独练习集-总索引.html" class="back-btn">← 返回练习集索引</a>
+    </div>
+
+    <!-- 思考窗口 -->
+    <div class="thinking-modal" id="thinkingModal">
+        <div class="thinking-content">
+            <div class="thinking-header">
+                <h3>💭 解题思考</h3>
+                <button onclick="closeThinkingModal()" class="close-btn">✕</button>
+            </div>
+            <div class="thinking-body">
+                <div class="thinking-section">
+                    <label>使用的技巧：</label>
+                    <div class="technique-tags" id="techniqueTags">
+                        <span class="tech-tag" onclick="toggleTechnique(this)">唯余法</span>
+                        <span class="tech-tag" onclick="toggleTechnique(this)">排除法</span>
+                        <span class="tech-tag" onclick="toggleTechnique(this)">数对法</span>
+                        <span class="tech-tag" onclick="toggleTechnique(this)">三数组法</span>
+                        <span class="tech-tag" onclick="toggleTechnique(this)">隐性数对</span>
+                        <span class="tech-tag" onclick="toggleTechnique(this)">区块排除</span>
+                        <span class="tech-tag" onclick="toggleTechnique(this)">Fish</span>
+                        <span class="tech-tag" onclick="toggleTechnique(this)">Wing</span>
+                        <span class="tech-tag" onclick="toggleTechnique(this)">链式推理</span>
+                        <span class="tech-tag" onclick="toggleTechnique(this)">唯一矩形</span>
+                    </div>
+                </div>
+                <div class="thinking-section">
+                    <label>解题思路：</label>
+                    <textarea id="thinkingText" placeholder="记录你的解题思路、关键突破点、遇到的困难等..."></textarea>
+                </div>
+                <div class="thinking-section">
+                    <label>用时记录：</label>
+                    <div class="time-record">
+                        <span id="currentTime">00:00</span>
+                        <button onclick="saveThinking()" class="save-btn">保存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 难度配置
+        const levelConfig = {
+            beginner: {
+                name: '入门级',
+                emoji: '🟢',
+                givenRange: [35, 40],
+                time: '3-5分钟',
+                totalCount: 30,
+                techniques: ['唯余法', '排除法']
+            },
+            elementary: {
+                name: '初级',
+                emoji: '🟠',
+                givenRange: [30, 34],
+                time: '5-8分钟',
+                totalCount: 40,
+                techniques: ['唯余法', '排除法', '数对法']
+            },
+            intermediate: {
+                name: '中级',
+                emoji: '🔴',
+                givenRange: [25, 29],
+                time: '8-15分钟',
+                totalCount: 60,
+                techniques: ['三数组法', '隐性数对', '区块排除法']
+            },
+            advanced: {
+                name: '高级',
+                emoji: '🟣',
+                givenRange: [22, 25],
+                time: '10-20分钟',
+                totalCount: 30,
+                techniques: ['Fish系列', 'Wing系列']
+            },
+            expert: {
+                name: '专业级',
+                emoji: '🔵',
+                givenRange: [20, 22],
+                time: '15-30分钟',
+                totalCount: 20,
+                techniques: ['链式推理', '唯一矩形', '高级Fish']
+            }
+        };
+
+        // 获取URL参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentLevel = urlParams.get('level') || 'beginner';
+        const currentIndex = parseInt(urlParams.get('index') || '1');
+        const config = levelConfig[currentLevel];
+
+        // 设置页面样式
+        document.body.className = currentLevel;
+        document.getElementById('header').className = `header ${currentLevel}`;
+        document.getElementById('title').textContent = `${config.emoji} ${config.name}练习`;
+        document.getElementById('levelBadge').className = `level ${currentLevel}`;
+        document.getElementById('levelBadge').textContent = config.name;
+        document.getElementById('puzzleTitle').className = `puzzle-title ${currentLevel}`;
+        document.title = `${config.name} - 第${currentIndex}题`;
+
+        // 数独生成算法
+        function solve(board) {
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    if (board[i][j] === 0) {
+                        const nums = shuffle([1,2,3,4,5,6,7,8,9]);
+                        for (let num of nums) {
+                            if (isValid(board, i, j, num)) {
+                                board[i][j] = num;
+                                if (solve(board)) return true;
+                                board[i][j] = 0;
+                            }
+                        }
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function isValid(board, row, col, num) {
+            for (let i = 0; i < 9; i++) {
+                if (board[row][i] === num || board[i][col] === num) return false;
+                const boxRow = Math.floor(row / 3) * 3 + Math.floor(i / 3);
+                const boxCol = Math.floor(col / 3) * 3 + i % 3;
+                if (board[boxRow][boxCol] === num) return false;
+            }
+            return true;
+        }
+
+        function shuffle(arr) {
+            const result = [...arr];
+            for (let i = result.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [result[i], result[j]] = [result[j], result[i]];
+            }
+            return result;
+        }
+
+        // 带种子的随机数生成器（确保同一题号生成相同题目）
+        function seededRandom(seed) {
+            const x = Math.sin(seed++) * 10000;
+            return x - Math.floor(x);
+        }
+
+        function shuffleWithSeed(arr, seed) {
+            const result = [...arr];
+            for (let i = result.length - 1; i > 0; i--) {
+                const j = Math.floor(seededRandom(seed + i) * (i + 1));
+                [result[i], result[j]] = [result[j], result[i]];
+            }
+            return result;
+        }
+
+        function generatePuzzle(givenCount, seed) {
+            const board = Array.from({length: 9}, () => Array(9).fill(0));
+            
+            // 使用种子生成初始解
+            const nums = shuffleWithSeed([1,2,3,4,5,6,7,8,9], seed);
+            const positions = shuffleWithSeed([...Array(81).keys()], seed + 1000);
+            
+            // 用种子化的回溯法生成完整解
+            solveWithSeed(board, seed);
+            const answer = board.map(r => [...r]);
+            
+            // 移除数字
+            const remove = 81 - givenCount;
+            for (let i = 0; i < remove; i++) {
+                const pos = positions[i];
+                const row = Math.floor(pos / 9);
+                const col = pos % 9;
+                board[row][col] = 0;
+            }
+            
+            return { puzzle: board, answer: answer };
+        }
+
+        function solveWithSeed(board, seed) {
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    if (board[i][j] === 0) {
+                        const nums = shuffleWithSeed([1,2,3,4,5,6,7,8,9], seed + i * 9 + j);
+                        for (let num of nums) {
+                            if (isValid(board, i, j, num)) {
+                                board[i][j] = num;
+                                if (solveWithSeed(board, seed)) return true;
+                                board[i][j] = 0;
+                            }
+                        }
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function solve(board) {
+            return solveWithSeed(board, Date.now());
+        }
+
+        // 游戏状态
+        let currentPuzzle = null;
+        let currentBoard = Array(81).fill(0);
+        let notes = Array.from({length: 81}, () => new Set());
+        let selectedCell = null;
+        let notesMode = false;
+        let timer = 0;
+        let timerInterval = null;
+        let startTime = null;
+
+        // 检查冲突
+        function getConflicts(idx, num) {
+            if (num === 0) return [];
+            const conflicts = [];
+            const row = Math.floor(idx / 9);
+            const col = idx % 9;
+            
+            // 检查同行
+            for (let j = 0; j < 9; j++) {
+                const checkIdx = row * 9 + j;
+                if (checkIdx === idx) continue;
+                const checkVal = currentPuzzle.puzzle[row][j] !== 0 ? currentPuzzle.puzzle[row][j] : currentBoard[checkIdx];
+                if (checkVal === num) conflicts.push(checkIdx);
+            }
+            
+            // 检查同列
+            for (let i = 0; i < 9; i++) {
+                const checkIdx = i * 9 + col;
+                if (checkIdx === idx) continue;
+                const checkVal = currentPuzzle.puzzle[i][col] !== 0 ? currentPuzzle.puzzle[i][col] : currentBoard[checkIdx];
+                if (checkVal === num) conflicts.push(checkIdx);
+            }
+            
+            // 检查同宫
+            const boxRow = Math.floor(row / 3) * 3;
+            const boxCol = Math.floor(col / 3) * 3;
+            for (let i = boxRow; i < boxRow + 3; i++) {
+                for (let j = boxCol; j < boxCol + 3; j++) {
+                    const checkIdx = i * 9 + j;
+                    if (checkIdx === idx) continue;
+                    const checkVal = currentPuzzle.puzzle[i][j] !== 0 ? currentPuzzle.puzzle[i][j] : currentBoard[checkIdx];
+                    if (checkVal === num) conflicts.push(checkIdx);
+                }
+            }
+            
+            return conflicts;
+        }
+
+        function checkConflict(idx, num) {
+            return getConflicts(idx, num).length > 0;
+        }
+
+        // 渲染棋盘
+        function renderBoard() {
+            const board = document.getElementById('sudokuBoard');
+            board.innerHTML = '';
+            
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    const idx = i * 9 + j;
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.dataset.idx = idx;
+                    
+                    const given = currentPuzzle.puzzle[i][j];
+                    const current = currentBoard[idx];
+                    
+                    if (given !== 0) {
+                        cell.classList.add('given', currentLevel);
+                        cell.textContent = given;
+                    } else {
+                        cell.classList.add('empty');
+                        if (current !== 0) {
+                            if (checkConflict(idx, current)) {
+                                cell.classList.add('error');
+                            } else if (current === currentPuzzle.answer[i][j]) {
+                                cell.classList.add('correct');
+                            }
+                            cell.textContent = current;
+                        } else if (notes[idx].size > 0) {
+                            const notesDiv = document.createElement('div');
+                            notesDiv.className = 'notes';
+                            for (let n = 1; n <= 9; n++) {
+                                const span = document.createElement('span');
+                                span.textContent = notes[idx].has(n) ? n : '';
+                                notesDiv.appendChild(span);
+                            }
+                            cell.appendChild(notesDiv);
+                        }
+                    }
+                    
+                    if (selectedCell === idx) {
+                        cell.classList.add('selected');
+                    }
+                    
+                    cell.addEventListener('click', () => selectCell(idx));
+                    board.appendChild(cell);
+                }
+            }
+            
+            updateProgress();
+        }
+
+        function selectCell(idx) {
+            const row = Math.floor(idx / 9);
+            const col = idx % 9;
+            if (currentPuzzle.puzzle[row][col] !== 0) return;
+            selectedCell = idx;
+            renderBoard();
+        }
+
+        function inputNumber(num) {
+            if (selectedCell === null) return;
+            const row = Math.floor(selectedCell / 9);
+            const col = selectedCell % 9;
+            if (currentPuzzle.puzzle[row][col] !== 0) return;
+            
+            if (notesMode && num !== 0) {
+                if (notes[selectedCell].has(num)) {
+                    notes[selectedCell].delete(num);
+                } else {
+                    notes[selectedCell].add(num);
+                }
+                currentBoard[selectedCell] = 0;
+            } else {
+                notes[selectedCell].clear();
+                currentBoard[selectedCell] = num;
+            }
+            
+            renderBoard();
+            checkComplete();
+        }
+
+        function toggleNotesMode() {
+            notesMode = !notesMode;
+            const btn = document.getElementById('notesBtn');
+            btn.textContent = notesMode ? '笔记 ✓' : '笔记';
+            btn.style.background = notesMode ? '#FF9800' : '#666';
+        }
+
+        function checkAnswer() {
+            let hasError = false;
+            let allCorrect = true;
+            
+            for (let i = 0; i < 81; i++) {
+                const row = Math.floor(i / 9);
+                const col = i % 9;
+                const cell = document.querySelector(`[data-idx="${i}"]`);
+                
+                if (currentPuzzle.puzzle[row][col] === 0) {
+                    if (currentBoard[i] !== 0) {
+                        if (currentBoard[i] !== currentPuzzle.answer[row][col]) {
+                            cell.classList.add('error');
+                            hasError = true;
+                        } else {
+                            cell.classList.remove('error');
+                        }
+                    } else {
+                        allCorrect = false;
+                    }
+                }
+            }
+            
+            const message = document.getElementById('message');
+            if (hasError) {
+                message.className = 'message error';
+                message.textContent = '❌ 有错误，请检查红色标记的格子';
+            } else if (allCorrect) {
+                message.className = 'message success';
+                message.textContent = '🎉 恭喜！全部正确！';
+                stopTimer();
+                saveProgress();
+            } else {
+                message.className = 'message success';
+                message.textContent = '✓ 目前填写的都正确，继续加油！';
+            }
+            
+            setTimeout(() => { message.className = 'message'; }, 3000);
+        }
+
+        function showHint() {
+            for (let i = 0; i < 81; i++) {
+                const row = Math.floor(i / 9);
+                const col = i % 9;
+                if (currentPuzzle.puzzle[row][col] === 0 && currentBoard[i] === 0) {
+                    currentBoard[i] = currentPuzzle.answer[row][col];
+                    notes[i].clear();
+                    selectedCell = i;
+                    renderBoard();
+                    checkComplete();
+                    return;
+                }
+            }
+        }
+
+        function checkComplete() {
+            let filled = 0;
+            let correct = 0;
+            
+            for (let i = 0; i < 81; i++) {
+                const row = Math.floor(i / 9);
+                const col = i % 9;
+                if (currentPuzzle.puzzle[row][col] !== 0) {
+                    filled++;
+                    correct++;
+                } else if (currentBoard[i] !== 0) {
+                    filled++;
+                    if (currentBoard[i] === currentPuzzle.answer[row][col]) {
+                        correct++;
+                    }
+                }
+            }
+            
+            if (filled === 81 && correct === 81) {
+                stopTimer();
+                const message = document.getElementById('message');
+                message.className = 'message success';
+                message.textContent = `🎉 恭喜完成！用时 ${formatTime(timer)}`;
+                saveProgress();
+            }
+        }
+
+        function updateProgress() {
+            let filled = 0;
+            for (let i = 0; i < 81; i++) {
+                const row = Math.floor(i / 9);
+                const col = i % 9;
+                if (currentPuzzle.puzzle[row][col] !== 0 || currentBoard[i] !== 0) {
+                    filled++;
+                }
+            }
+            document.getElementById('progress').textContent = `进度：${filled}/81`;
+        }
+
+        function prevPuzzle() {
+            const prevIndex = currentIndex > 1 ? currentIndex - 1 : 1;
+            window.location.href = `sudoku-game.html?level=${currentLevel}&index=${prevIndex}`;
+        }
+
+        function nextPuzzle() {
+            const nextIndex = currentIndex < config.totalCount ? currentIndex + 1 : config.totalCount;
+            window.location.href = `sudoku-game.html?level=${currentLevel}&index=${nextIndex}`;
+        }
+
+        function loadPuzzle() {
+            // 使用固定种子，确保同一题号每次生成相同题目
+            const levelSeeds = {
+                beginner: 1000,
+                elementary: 2000,
+                intermediate: 3000,
+                advanced: 4000,
+                expert: 5000
+            };
+            const seed = levelSeeds[currentLevel] + currentIndex * 100;
+            
+            const givenCount = config.givenRange[0] + Math.floor(seededRandom(seed) * (config.givenRange[1] - config.givenRange[0] + 1));
+            currentPuzzle = generatePuzzle(givenCount, seed);
+            currentBoard = Array(81).fill(0);
+            notes = Array.from({length: 81}, () => new Set());
+            selectedCell = null;
+            
+            document.getElementById('puzzleTitle').textContent = `第 ${currentIndex} 题`;
+            document.getElementById('puzzleInfo').textContent = `已知：${givenCount}个数字 | 建议用时：${config.time}`;
+            
+            renderBoard();
+            resetTimer();
+            startTimer();
+            document.getElementById('message').className = 'message';
+        }
+
+        function resetPuzzle() {
+            currentBoard = Array(81).fill(0);
+            notes = Array.from({length: 81}, () => new Set());
+            selectedCell = null;
+            renderBoard();
+            resetTimer();
+            startTimer();
+            document.getElementById('message').className = 'message';
+        }
+
+        function startTimer() {
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                timer = Math.floor((Date.now() - startTime) / 1000);
+                document.getElementById('timer').textContent = formatTime(timer);
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function resetTimer() {
+            stopTimer();
+            timer = 0;
+            document.getElementById('timer').textContent = '00:00';
+        }
+
+        function formatTime(seconds) {
+            const min = Math.floor(seconds / 60);
+            const sec = seconds % 60;
+            return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+        }
+
+        function saveProgress() {
+            const key = `level=${currentLevel}&index=${currentIndex}`;
+            const completed = JSON.parse(localStorage.getItem('sudoku_completed') || '[]');
+            if (!completed.includes(key)) {
+                completed.push(key);
+                localStorage.setItem('sudoku_completed', JSON.stringify(completed));
+            }
+        }
+
+        // 思考窗口功能
+        function openThinkingModal() {
+            document.getElementById('thinkingModal').classList.add('show');
+            document.getElementById('currentTime').textContent = formatTime(timer);
+            
+            // 加载已保存的思考
+            const key = `thinking_${currentLevel}_${currentIndex}`;
+            const saved = JSON.parse(localStorage.getItem(key) || '{}');
+            
+            if (saved.text) {
+                document.getElementById('thinkingText').value = saved.text;
+            }
+            
+            if (saved.techniques) {
+                document.querySelectorAll('.tech-tag').forEach(tag => {
+                    if (saved.techniques.includes(tag.textContent)) {
+                        tag.classList.add('selected');
+                    }
+                });
+            }
+        }
+
+        function closeThinkingModal() {
+            document.getElementById('thinkingModal').classList.remove('show');
+        }
+
+        function toggleTechnique(tag) {
+            tag.classList.toggle('selected');
+        }
+
+        function saveThinking() {
+            const text = document.getElementById('thinkingText').value;
+            const techniques = Array.from(document.querySelectorAll('.tech-tag.selected'))
+                .map(tag => tag.textContent);
+            
+            const key = `thinking_${currentLevel}_${currentIndex}`;
+            localStorage.setItem(key, JSON.stringify({
+                text: text,
+                techniques: techniques,
+                time: timer,
+                timestamp: new Date().toISOString()
+            }));
+            
+            closeThinkingModal();
+            
+            // 显示保存成功提示
+            const message = document.getElementById('message');
+            message.className = 'message success';
+            message.textContent = '✓ 思考记录已保存';
+            setTimeout(() => { message.className = 'message'; }, 2000);
+        }
+
+        // 键盘支持
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '1' && e.key <= '9') {
+                inputNumber(parseInt(e.key));
+            } else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
+                inputNumber(0);
+            } else if (e.key === 'ArrowLeft') {
+                prevPuzzle();
+            } else if (e.key === 'ArrowRight') {
+                nextPuzzle();
+            } else if (e.key === 'n' || e.key === 'N') {
+                toggleNotesMode();
+            }
+        });
+
+        // 初始化
+        loadPuzzle();
+    </script>
+</body>
+</html>
