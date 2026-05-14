@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>数独练习 - 移动版</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; overflow-x: hidden; touch-action: manipulation; }
+        .container { max-width: 100%; margin: 0 auto; padding: 10px; }
+        
+        /* 首页 */
+        .home-page { padding: 20px 15px; }
+        .home-header { text-align: center; color: white; margin-bottom: 30px; }
+        .home-header h1 { font-size: 32px; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .home-header p { font-size: 14px; opacity: 0.9; }
+        .stats-row { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
+        .stat-item { background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 12px 20px; border-radius: 12px; text-align: center; color: white; }
+        .stat-item .number { font-size: 24px; font-weight: 700; }
+        .stat-item .label { font-size: 12px; opacity: 0.9; }
+        .level-list { display: flex; flex-direction: column; gap: 15px; }
+        .level-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s; }
+        .level-card:active { transform: scale(0.98); }
+        .level-header { padding: 15px 20px; color: white; display: flex; align-items: center; gap: 12px; }
+        .level-header.beginner { background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%); }
+        .level-header.elementary { background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); }
+        .level-header.intermediate { background: linear-gradient(135deg, #e53935 0%, #c62828 100%); }
+        .level-header.advanced { background: linear-gradient(135deg, #8e24aa 0%, #6a1b9a 100%); }
+        .level-header.expert { background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%); }
+        .level-emoji { font-size: 32px; }
+        .level-title { flex: 1; }
+        .level-title h3 { font-size: 18px; margin-bottom: 3px; }
+        .level-title .info { font-size: 12px; opacity: 0.9; }
+        .level-arrow { font-size: 20px; opacity: 0.8; }
+        .level-body { padding: 15px 20px; }
+        .level-desc { color: #666; font-size: 13px; margin-bottom: 10px; }
+        .level-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .tag { background: #f5f5f5; padding: 4px 10px; border-radius: 12px; font-size: 11px; color: #666; }
+        
+        /* 题目选择页 */
+        .puzzle-page { display: none; }
+        .puzzle-header { display: flex; align-items: center; gap: 10px; padding: 15px; background: rgba(255,255,255,0.95); border-radius: 12px; margin-bottom: 15px; }
+        .back-btn { font-size: 24px; color: #667eea; cursor: pointer; }
+        .puzzle-title { flex: 1; font-size: 16px; font-weight: 600; color: #333; }
+        .puzzle-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 15px; background: rgba(255,255,255,0.95); border-radius: 12px; margin-bottom: 15px; }
+        .puzzle-btn { aspect-ratio: 1; background: #f5f5f5; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; font-weight: 600; color: #333; cursor: pointer; }
+        .puzzle-btn:active { background: #e3f2fd; border-color: #2196f3; }
+        .puzzle-btn.completed { background: #e8f5e9; border-color: #4caf50; color: #2e7d32; }
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 15px; padding: 15px; background: rgba(255,255,255,0.95); border-radius: 12px; }
+        .page-btn { background: #f5f5f5; border: 2px solid #e0e0e0; padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; }
+        .page-btn:active:not(:disabled) { background: #e3f2fd; border-color: #2196f3; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .page-info { font-size: 13px; color: #666; }
+        
+        /* 游戏页 */
+        .game-page { display: none; }
+        .game-header { display: flex; align-items: center; gap: 10px; padding: 12px 15px; background: rgba(255,255,255,0.95); border-radius: 12px; margin-bottom: 10px; }
+        .game-title { flex: 1; font-size: 14px; font-weight: 600; color: #333; }
+        .timer { font-size: 16px; font-weight: 600; color: #667eea; font-family: 'Courier New', monospace; }
+        .progress-bar { background: rgba(255,255,255,0.95); border-radius: 12px; padding: 10px 15px; margin-bottom: 10px; }
+        .progress-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .progress-text { font-size: 12px; color: #666; }
+        .progress-track { height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #43a047, #66bb6a); border-radius: 3px; transition: width 0.3s ease; }
+        
+        /* 数独棋盘 */
+        .sudoku-board { background: white; border-radius: 12px; padding: 8px; margin-bottom: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .sudoku-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 1px; background: #333; border: 3px solid #333; border-radius: 4px; }
+        .cell { aspect-ratio: 1; background: white; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; cursor: pointer; position: relative; }
+        .cell:nth-child(3n) { border-right: 2px solid #333; }
+        .cell:nth-child(9n) { border-right: none; }
+        .cell:nth-child(n+19):nth-child(-n+27), .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid #333; }
+        .cell.given { background: #f5f5f5; color: #333; font-weight: 700; }
+        .cell.selected { background: #e3f2fd; }
+        .cell.error { background: #ffebee; color: #d32f2f; }
+        .cell.conflict { color: #d32f2f; animation: shake 0.3s ease; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+        .cell .notes { position: absolute; top: 2px; left: 2px; font-size: 8px; color: #999; display: grid; grid-template-columns: repeat(3, 1fr); width: calc(100% - 4px); height: calc(100% - 4px); }
+        .cell .notes span { display: flex; align-items: center; justify-content: center; }
+        
+        /* 数字键盘 */
+        .numpad { background: rgba(255,255,255,0.95); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+        .numpad-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .num-btn { aspect-ratio: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 10px; font-size: 20px; font-weight: 600; color: white; cursor: pointer; }
+        .num-btn:active { transform: scale(0.95); opacity: 0.9; }
+        .num-btn.disabled { background: #e0e0e0; color: #999; }
+        .num-btn.erase { background: #ff9800; }
+        .num-btn.note { background: #9c27b0; font-size: 14px; }
+        .num-btn.note.active { background: #e91e63; }
+        
+        /* 操作按钮 */
+        .action-bar { display: flex; gap: 10px; margin-bottom: 10px; }
+        .action-btn { flex: 1; background: rgba(255,255,255,0.95); border: 2px solid #667eea; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 600; color: #667eea; cursor: pointer; }
+        .action-btn:active { background: #667eea; color: white; }
+        .action-btn.thinking { border-color: #ff9800; color: #ff9800; }
+        .action-btn.thinking:active { background: #ff9800; color: white; }
+        
+        /* 思考底部面板 */
+        .thinking-panel { position: fixed; bottom: -40%; left: 0; width: 100%; height: 40vh; background: white; box-shadow: 0 -5px 20px rgba(0,0,0,0.3); transition: bottom 0.3s ease; z-index: 1000; display: flex; flex-direction: column; border-radius: 20px 20px 0 0; }
+        .thinking-panel.show { bottom: 0; }
+        .thinking-header { padding: 15px 20px; background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; display: flex; align-items: center; justify-content: space-between; border-radius: 20px 20px 0 0; }
+        .thinking-header h3 { font-size: 18px; }
+        .close-thinking { font-size: 24px; cursor: pointer; padding: 5px; }
+        .thinking-body { flex: 1; padding: 15px; overflow-y: auto; }
+        .thinking-textarea { width: 100%; height: 100%; min-height: 150px; border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px; font-size: 14px; line-height: 1.6; resize: none; font-family: inherit; }
+        .thinking-textarea:focus { outline: none; border-color: #ff9800; }
+        .thinking-footer { padding: 15px; border-top: 1px solid #e0e0e0; }
+        .save-thinking-btn { width: 100%; background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); border: none; border-radius: 10px; padding: 12px; font-size: 16px; font-weight: 600; color: white; cursor: pointer; }
+        
+        /* 遮罩层（半透明，不完全遮挡） */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 60vh; background: rgba(0,0,0,0.3); opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 999; }
+        .overlay.show { opacity: 1; visibility: visible; }
+        
+        /* 完成弹窗 */
+        .complete-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); background: white; border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3); opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 2000; }
+        .complete-modal.show { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
+        .complete-modal .emoji { font-size: 60px; margin-bottom: 15px; }
+        .complete-modal h2 { font-size: 24px; color: #333; margin-bottom: 10px; }
+        .complete-modal p { color: #666; margin-bottom: 20px; }
+        .complete-modal .time-result { font-size: 32px; font-weight: 700; color: #667eea; margin-bottom: 20px; }
+        .complete-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 25px; padding: 12px 40px; font-size: 16px; font-weight: 600; color: white; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 首页 -->
+        <div class="home-page" id="homePage">
+            <div class="home-header">
+                <h1>🧩 数独练习</h1>
+                <p>从入门到专业 · 180道精选题目</p>
+            </div>
+            <div class="stats-row">
+                <div class="stat-item"><div class="number">180</div><div class="label">总题数</div></div>
+                <div class="stat-item"><div class="number" id="completedCount">0</div><div class="label">已完成</div></div>
+            </div>
+            <div class="level-list" id="levelList"></div>
+        </div>
+        
+        <!-- 题目选择页 -->
+        <div class="puzzle-page" id="puzzlePage">
+            <div class="puzzle-header">
+                <span class="back-btn" onclick="goHome()">←</span>
+                <span class="puzzle-title" id="puzzleTitle">入门级</span>
+            </div>
+            <div class="puzzle-grid" id="puzzleGrid"></div>
+            <div class="pagination" id="pagination"></div>
+        </div>
+        
+        <!-- 游戏页 -->
+        <div class="game-page" id="gamePage">
+            <div class="game-header">
+                <span class="back-btn" onclick="goToPuzzleList()">←</span>
+                <span class="game-title" id="gameTitle">入门级 第1题</span>
+                <span class="timer" id="timer">00:00</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-header">
+                    <span class="progress-text">完成进度</span>
+                    <span class="progress-text" id="progressText">0/81</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
+            </div>
+            <div class="sudoku-board"><div class="sudoku-grid" id="sudokuGrid"></div></div>
+            <div class="numpad"><div class="numpad-grid" id="numpadGrid"></div></div>
+            <div class="action-bar">
+                <button class="action-btn" onclick="resetPuzzle()">重置</button>
+                <button class="action-btn thinking" onclick="toggleThinking()">💡 思考</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 思考侧边栏 -->
+    <div class="thinking-panel" id="thinkingPanel">
+        <div class="thinking-header">
+            <h3>💡 解题思路</h3>
+            <span class="close-thinking" onclick="toggleThinking()">×</span>
+        </div>
+        <div class="thinking-body">
+            <textarea class="thinking-textarea" id="thinkingText" placeholder="在这里记录你的解题思路..."></textarea>
+        </div>
+        <div class="thinking-footer">
+            <button class="save-thinking-btn" onclick="saveThinking()">保存思路</button>
+        </div>
+    </div>
+    
+    <div class="overlay" id="overlay" onclick="toggleThinking()"></div>
+    
+    <div class="complete-modal" id="completeModal">
+        <div class="emoji">🎉</div>
+        <h2>恭喜完成！</h2>
+        <p>用时</p>
+        <div class="time-result" id="finalTime">00:00</div>
+        <button class="complete-btn" onclick="closeCompleteModal()">继续练习</button>
+    </div>
+    
+    <script>
+        // 难度配置
+        const levelConfigs = [
+            { id: 'beginner', name: '入门级', emoji: '🟢', total: 30, givenRange: '35-40个已知数字', techniques: ['唯余法', '排除法'], description: '适合零基础新手', headerClass: 'beginner', givenMin: 35, givenMax: 40 },
+            { id: 'elementary', name: '初级', emoji: '🟠', total: 40, givenRange: '30-34个已知数字', techniques: ['唯余法', '排除法', '数对法'], description: '巩固基础技巧', headerClass: 'elementary', givenMin: 30, givenMax: 34 },
+            { id: 'intermediate', name: '中级', emoji: '🔴', total: 60, givenRange: '25-29个已知数字', techniques: ['三数组法', '隐性数对', '区块排除法'], description: '学习中级技巧', headerClass: 'intermediate', givenMin: 25, givenMax: 29 },
+            { id: 'advanced', name: '高级', emoji: '🟣', total: 30, givenRange: '22-25个已知数字', techniques: ['Fish系列', 'Wing系列'], description: '掌握高级技巧', headerClass: 'advanced', givenMin: 22, givenMax: 25 },
+            { id: 'expert', name: '专业级', emoji: '🔵', total: 20, givenRange: '20-22个已知数字', techniques: ['链式推理', '唯一矩形'], description: '达到竞技水平', headerClass: 'expert', givenMin: 20, givenMax: 22 }
+        ];
+        
+        // 状态管理
+        const PER_PAGE = 10;
+        let currentLevel = null;
+        let currentIndex = 1;
+        let currentPages = {};
+        let puzzle = [];
+        let solution = [];
+        let given = [];
+        let selectedCell = null;
+        let noteMode = false;
+        let notes = Array(81).fill(null).map(() => new Set());
+        let timer = null;
+        let seconds = 0;
+        let isCompleted = false;
+        
+        levelConfigs.forEach(config => { currentPages[config.id] = 1; });
+        
+        // 页面导航
+        function showPage(pageId) {
+            document.getElementById('homePage').style.display = 'none';
+            document.getElementById('puzzlePage').style.display = 'none';
+            document.getElementById('gamePage').style.display = 'none';
+            document.getElementById(pageId).style.display = 'block';
+        }
+        
+        function goHome() { showPage('homePage'); updateCompletedCount(); }
+        function goToPuzzleList() { if (timer) { clearInterval(timer); timer = null; } showPage('puzzlePage'); renderPuzzleList(); }
+        
+        // 首页渲染
+        function renderHome() {
+            const list = document.getElementById('levelList');
+            list.innerHTML = levelConfigs.map(config => {
+                const tags = config.techniques.map(t => `<span class="tag">${t}</span>`).join('');
+                return `<div class="level-card" onclick="selectLevel('${config.id}')">
+                    <div class="level-header ${config.headerClass}">
+                        <span class="level-emoji">${config.emoji}</span>
+                        <div class="level-title"><h3>${config.name}</h3><div class="info">${config.total}题 · ${config.givenRange}</div></div>
+                        <span class="level-arrow">→</span>
+                    </div>
+                    <div class="level-body"><div class="level-desc">${config.description}</div><div class="level-tags">${tags}</div></div>
+                </div>`;
+            }).join('');
+            updateCompletedCount();
+        }
+        
+        function updateCompletedCount() {
+            const completed = JSON.parse(localStorage.getItem('sudoku_completed') || '[]');
+            document.getElementById('completedCount').textContent = completed.length;
+        }
+        
+        function selectLevel(levelId) {
+            currentLevel = levelConfigs.find(c => c.id === levelId);
+            currentPages[levelId] = 1;
+            showPage('puzzlePage');
+            renderPuzzleList();
+        }
+        
+        // 题目列表渲染
+        function renderPuzzleList() {
+            const levelId = currentLevel.id;
+            const total = currentLevel.total;
+            const currentPage = currentPages[levelId];
+            const totalPages = Math.ceil(total / PER_PAGE);
+            const start = (currentPage - 1) * PER_PAGE + 1;
+            const end = Math.min(currentPage * PER_PAGE, total);
+            
+            document.getElementById('puzzleTitle').textContent = currentLevel.name;
+            
+            const grid = document.getElementById('puzzleGrid');
+            const completed = JSON.parse(localStorage.getItem('sudoku_completed') || '[]');
+            let buttons = '';
+            for (let i = start; i <= end; i++) {
+                const key = `level=${levelId}&index=${i}`;
+                const isCompleted = completed.includes(key);
+                buttons += `<button class="puzzle-btn ${isCompleted ? 'completed' : ''}" onclick="startPuzzle(${i})">${i}</button>`;
+            }
+            grid.innerHTML = buttons;
+            
+            document.getElementById('pagination').innerHTML = `
+                <button class="page-btn" onclick="changePage(-1)" ${currentPage === 1 ? 'disabled' : ''}>◀</button>
+                <span class="page-info">${currentPage}/${totalPages}</span>
+                <button class="page-btn" onclick="changePage(1)" ${currentPage === totalPages ? 'disabled' : ''}>▶</button>`;
+        }
+        
+        function changePage(direction) {
+            const levelId = currentLevel.id;
+            const totalPages = Math.ceil(currentLevel.total / PER_PAGE);
+            currentPages[levelId] += direction;
+            if (currentPages[levelId] < 1) currentPages[levelId] = 1;
+            if (currentPages[levelId] > totalPages) currentPages[levelId] = totalPages;
+            renderPuzzleList();
+        }
+        
+        // 数独生成算法
+        function seededRandom(seed) { const x = Math.sin(seed++) * 10000; return x - Math.floor(x); }
+        
+        function shuffleWithSeed(arr, seed) {
+            const result = [...arr];
+            for (let i = result.length - 1; i > 0; i--) {
+                const j = Math.floor(seededRandom(seed++) * (i + 1));
+                [result[i], result[j]] = [result[j], result[i]];
+            }
+            return { shuffled: result, seed };
+        }
+        
+        function isValid(board, row, col, num) {
+            for (let i = 0; i < 9; i++) {
+                if (board[row * 9 + i] === num || board[i * 9 + col] === num) return false;
+            }
+            const boxRow = Math.floor(row / 3) * 3;
+            const boxCol = Math.floor(col / 3) * 3;
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if (board[(boxRow + i) * 9 + (boxCol + j)] === num) return false;
+                }
+            }
+            return true;
+        }
+        
+        function solveWithSeed(board, seed) {
+            const empty = board.indexOf(0);
+            if (empty === -1) return { solved: true, board, seed };
+            const row = Math.floor(empty / 9);
+            const col = empty % 9;
+            let { shuffled: nums, seed: newSeed } = shuffleWithSeed([1,2,3,4,5,6,7,8,9], seed);
+            for (const num of nums) {
+                if (isValid(board, row, col, num)) {
+                    board[empty] = num;
+                    const result = solveWithSeed(board, newSeed);
+                    if (result.solved) return result;
+                    board[empty] = 0;
+                }
+            }
+            return { solved: false, board, seed };
+        }
+        
+        function generatePuzzle(level, index) {
+            const levelSeeds = { beginner: 1000, elementary: 2000, intermediate: 3000, advanced: 4000, expert: 5000 };
+            let seed = levelSeeds[level] + index * 100;
+            let board = Array(81).fill(0);
+            const result = solveWithSeed(board, seed);
+            solution = [...result.board];
+            seed = result.seed;
+            
+            const config = levelConfigs.find(c => c.id === level);
+            const givenCount = config.givenMin + Math.floor(seededRandom(seed++) * (config.givenMax - config.givenMin + 1));
+            
+            let positions = Array.from({length: 81}, (_, i) => i);
+            let { shuffled: shuffledPos } = shuffleWithSeed(positions, seed);
+            
+            puzzle = [...solution];
+            given = Array(81).fill(false);
+            
+            for (let i = 0; i < 81 - givenCount; i++) {
+                puzzle[shuffledPos[i]] = 0;
+            }
+            
+            for (let i = 0; i < 81; i++) {
+                given[i] = puzzle[i] !== 0;
+            }
+        }
+        
+        // 游戏逻辑
+        function startPuzzle(index) {
+            currentIndex = index;
+            isCompleted = false;
+            generatePuzzle(currentLevel.id, index);
+            notes = Array(81).fill(null).map(() => new Set());
+            selectedCell = null;
+            noteMode = false;
+            document.getElementById('gameTitle').textContent = `${currentLevel.name} 第${index}题`;
+            showPage('gamePage');
+            renderBoard();
+            renderNumpad();
+            startTimer();
+            updateProgress();
+            loadThinking();
+        }
+        
+        function renderBoard() {
+            const grid = document.getElementById('sudokuGrid');
+            let html = '';
+            for (let i = 0; i < 81; i++) {
+                const value = puzzle[i];
+                const isGiven = given[i];
+                const classes = ['cell'];
+                if (isGiven) classes.push('given');
+                
+                let notesHtml = '';
+                if (!isGiven && notes[i].size > 0 && value === 0) {
+                    notesHtml = '<div class="notes">';
+                    for (let n = 1; n <= 9; n++) {
+                        notesHtml += `<span>${notes[i].has(n) ? n : ''}</span>`;
+                    }
+                    notesHtml += '</div>';
+                }
+                
+                html += `<div class="${classes.join(' ')}" data-index="${i}" onclick="selectCell(${i})">${value || ''}${notesHtml}</div>`;
+            }
+            grid.innerHTML = html;
+        }
+        
+        function renderNumpad() {
+            const grid = document.getElementById('numpadGrid');
+            const counts = Array(10).fill(0);
+            puzzle.forEach(v => { if (v > 0) counts[v]++; });
+            
+            let html = '';
+            for (let i = 1; i <= 9; i++) {
+                const disabled = counts[i] >= 9 ? 'disabled' : '';
+                html += `<button class="num-btn ${disabled}" onclick="inputNumber(${i})">${i}</button>`;
+            }
+            html += `<button class="num-btn note ${noteMode ? 'active' : ''}" onclick="toggleNoteMode()">📝</button>`;
+            html += `<button class="num-btn erase" onclick="eraseCell()">✕</button>`;
+            grid.innerHTML = html;
+        }
+        
+        function selectCell(index) {
+            if (given[index]) return;
+            document.querySelectorAll('.cell.selected').forEach(c => c.classList.remove('selected'));
+            selectedCell = index;
+            document.querySelector(`.cell[data-index="${index}"]`).classList.add('selected');
+        }
+        
+        function inputNumber(num) {
+            if (selectedCell === null || given[selectedCell]) return;
+            
+            if (noteMode) {
+                if (notes[selectedCell].has(num)) {
+                    notes[selectedCell].delete(num);
+                } else {
+                    notes[selectedCell].add(num);
+                }
+                puzzle[selectedCell] = 0;
+            } else {
+                puzzle[selectedCell] = num;
+                notes[selectedCell].clear();
+            }
+            
+            renderBoard();
+            renderNumpad();
+            updateProgress();
+            checkConflicts();
+            checkCompletion();
+        }
+        
+        function eraseCell() {
+            if (selectedCell === null || given[selectedCell]) return;
+            puzzle[selectedCell] = 0;
+            notes[selectedCell].clear();
+            renderBoard();
+            renderNumpad();
+            updateProgress();
+        }
+        
+        function toggleNoteMode() {
+            noteMode = !noteMode;
+            renderNumpad();
+        }
+        
+        function updateProgress() {
+            const filled = puzzle.filter(v => v !== 0).length;
+            document.getElementById('progressText').textContent = `${filled}/81`;
+            document.getElementById('progressFill').style.width = `${(filled / 81) * 100}%`;
+        }
+        
+        function checkConflicts() {
+            document.querySelectorAll('.cell.conflict').forEach(c => c.classList.remove('conflict'));
+            
+            for (let i = 0; i < 81; i++) {
+                if (puzzle[i] === 0 || given[i]) continue;
+                
+                const conflicts = getConflicts(i, puzzle[i]);
+                if (conflicts.length > 0) {
+                    document.querySelector(`.cell[data-index="${i}"]`).classList.add('conflict');
+                    conflicts.forEach(idx => {
+                        document.querySelector(`.cell[data-index="${idx}"]`).classList.add('conflict');
+                    });
+                }
+            }
+        }
+        
+        function getConflicts(idx, num) {
+            const conflicts = [];
+            const row = Math.floor(idx / 9);
+            const col = idx % 9;
+            
+            for (let i = 0; i < 9; i++) {
+                if (puzzle[row * 9 + i] === num && row * 9 + i !== idx) conflicts.push(row * 9 + i);
+                if (puzzle[i * 9 + col] === num && i * 9 + col !== idx) conflicts.push(i * 9 + col);
+            }
+            
+            const boxRow = Math.floor(row / 3) * 3;
+            const boxCol = Math.floor(col / 3) * 3;
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    const boxIdx = (boxRow + i) * 9 + (boxCol + j);
+                    if (puzzle[boxIdx] === num && boxIdx !== idx) conflicts.push(boxIdx);
+                }
+            }
+            
+            return conflicts;
+        }
+        
+        function checkCompletion() {
+            if (isCompleted) return;
+            
+            for (let i = 0; i < 81; i++) {
+                if (puzzle[i] === 0 || puzzle[i] !== solution[i]) return;
+            }
+            
+            isCompleted = true;
+            clearInterval(timer);
+            
+            const key = `level=${currentLevel.id}&index=${currentIndex}`;
+            const completed = JSON.parse(localStorage.getItem('sudoku_completed') || '[]');
+            if (!completed.includes(key)) {
+                completed.push(key);
+                localStorage.setItem('sudoku_completed', JSON.stringify(completed));
+            }
+            
+            document.getElementById('finalTime').textContent = document.getElementById('timer').textContent;
+            document.getElementById('completeModal').classList.add('show');
+        }
+        
+        function closeCompleteModal() {
+            document.getElementById('completeModal').classList.remove('show');
+            goToPuzzleList();
+        }
+        
+        function resetPuzzle() {
+            if (confirm('确定要重置当前题目吗？')) {
+                startPuzzle(currentIndex);
+            }
+        }
+        
+        // 计时器
+        function startTimer() {
+            if (timer) clearInterval(timer);
+            seconds = 0;
+            updateTimerDisplay();
+            timer = setInterval(() => {
+                seconds++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+        
+        function updateTimerDisplay() {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            document.getElementById('timer').textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // 思考功能
+        function toggleThinking() {
+            const panel = document.getElementById('thinkingPanel');
+            const overlay = document.getElementById('overlay');
+            panel.classList.toggle('show');
+            overlay.classList.toggle('show');
+        }
+        
+        function saveThinking() {
+            const key = `thinking_${currentLevel.id}_${currentIndex}`;
+            const text = document.getElementById('thinkingText').value;
+            localStorage.setItem(key, text);
+            alert('思路已保存！');
+        }
+        
+        function loadThinking() {
+            const key = `thinking_${currentLevel.id}_${currentIndex}`;
+            const text = localStorage.getItem(key) || '';
+            document.getElementById('thinkingText').value = text;
+        }
+        
+        // 初始化
+        renderHome();
+    </script>
+</body>
+</html>
